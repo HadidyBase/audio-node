@@ -1,17 +1,17 @@
-# @hadidyapp/audio-node
+# @hadidyapp/audio-node-sdk
 
 Node.js 22+ extensions for the Hadidy Audio SDK. Extends `@hadidyapp/audio-sdk` with disk I/O, streaming uploads, and webhook verification middleware.
 
 ## Installation
 
 ```bash
-npm install @hadidyapp/audio-node @hadidyapp/audio-sdk
+npm install @hadidyapp/audio-node-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { AudioNodeClient } from '@hadidyapp/audio-node';
+import { AudioNodeClient } from '@hadidyapp/audio-node-sdk';
 
 const client = new AudioNodeClient({ apiKey: process.env.HADIDY_API_KEY! });
 
@@ -31,7 +31,7 @@ await client.downloadToPath(job.id, './output/podcast.mp3', {
 ## Webhook Verification
 
 ```typescript
-import { WebhookVerifier } from '@hadidyapp/audio-node';
+import { WebhookVerifier } from '@hadidyapp/audio-node-sdk';
 import express from 'express';
 
 const verifier = new WebhookVerifier(process.env.HADIDY_WEBHOOK_SECRET!);

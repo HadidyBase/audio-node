@@ -1,6 +1,6 @@
 {
   "name": "@hadidyapp/audio-node-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Node.js SDK extensions for Hadidy Audio — file streaming, disk uploads, webhook middleware",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -23,7 +23,7 @@
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
-  "peerDependencies": {
+  "dependencies": {
     "@hadidyapp/audio-sdk": "^0.1.0"
   },
   "devDependencies": {
