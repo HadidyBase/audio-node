@@ -31,7 +31,7 @@ export class AudioNodeClient extends AudioClient {
   ): Promise<Job> {
     const chunks: Uint8Array[] = [];
     for await (const chunk of stream) {
-      chunks.push(chunk instanceof Buffer ? new Uint8Array(chunk) : new Uint8Array(chunk as ArrayBuffer));
+      chunks.push(typeof chunk === 'string' ? new TextEncoder().encode(chunk) : new Uint8Array(chunk as unknown as ArrayBuffer));
     }
     const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
     const merged = new Uint8Array(totalLength);
