@@ -1,5 +1,5 @@
 {
-  "name": "@hadidyapp/audio-node",
+  "name": "@hadidyapp/audio-node-sdk",
   "version": "0.1.0",
   "description": "Node.js SDK extensions for Hadidy Audio — file streaming, disk uploads, webhook middleware",
   "type": "module",
