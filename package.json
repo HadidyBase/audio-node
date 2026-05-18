@@ -1,7 +1,7 @@
 {
   "name": "@hadidyapp/audio-node-sdk",
-  "version": "0.1.4",
-  "description": "Node.js SDK extensions for Hadidy Audio — file streaming, disk uploads, webhook middleware",
+  "version": "0.1.5",
+  "description": "Node.js SDK extensions for Hadidy Audio \u2014 file streaming, disk uploads, webhook middleware",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -13,8 +13,12 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
-  "engines": { "node": ">=22" },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -32,7 +36,13 @@
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"
   },
-  "keywords": ["audio", "transcoding", "node", "sdk", "hadidy"],
+  "keywords": [
+    "audio",
+    "transcoding",
+    "node",
+    "sdk",
+    "hadidy"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
