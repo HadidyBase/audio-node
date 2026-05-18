@@ -32,7 +32,7 @@ export class AudioNodeClient extends AudioClient {
     // Convert the Node.js Readable to a WHATWG ReadableStream, then read into
     // a Blob via Response. This avoids the previous double-buffering (chunk
     // array → merged Uint8Array → another copy on upload).
-    const webStream = Readable.toWeb(stream as NodeJS.ReadableStream & { readable: true }) as ReadableStream<Uint8Array>;
+    const webStream = Readable.toWeb(Readable.from(stream)) as ReadableStream<Uint8Array>;
     const blob = await new Response(webStream).blob();
     const file = new File([blob], filename);
     return this.jobs.create(file, { ...options, filename } as JobCreateOptionsV1 & { filename?: string });
