@@ -92,7 +92,14 @@ import Fastify from 'fastify';
 const verifier = new WebhookVerifier(process.env.HADIDY_WEBHOOK_SECRET!);
 const fastify = Fastify();
 
-// Register the plugin — it adds a pre-handler that verifies every request to the route
+// Required: preserve the raw body so HMAC can be verified against the original bytes.
+// Must be registered before fastify.register(verifier.fastifyPlugin()).
+fastify.addContentTypeParser('application/json', { parseAs: 'buffer' }, (req, body, done) => {
+  (req as any).rawBody = body;
+  done(null, JSON.parse(body.toString()));
+});
+
+// Register the plugin — it adds a preHandler that verifies every request.
 fastify.register(verifier.fastifyPlugin());
 
 fastify.post('/hooks/hadidy', async (request, reply) => {

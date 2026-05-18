@@ -29,17 +29,12 @@ export class AudioNodeClient extends AudioClient {
     filename: string,
     options: JobCreateOptionsV1,
   ): Promise<Job> {
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of stream) {
-      chunks.push(typeof chunk === 'string' ? new TextEncoder().encode(chunk) : new Uint8Array(chunk as unknown as ArrayBuffer));
-    }
-    const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
-    const merged = new Uint8Array(totalLength);
-    let offset = 0;
-    for (const chunk of chunks) {
-      merged.set(chunk, offset);
-      offset += chunk.length;
-    }
-    return this.jobs.create(merged, { ...options, filename } as JobCreateOptionsV1 & { filename?: string });
+    // Convert the Node.js Readable to a WHATWG ReadableStream, then read into
+    // a Blob via Response. This avoids the previous double-buffering (chunk
+    // array → merged Uint8Array → another copy on upload).
+    const webStream = Readable.toWeb(stream as NodeJS.ReadableStream & { readable: true }) as ReadableStream<Uint8Array>;
+    const blob = await new Response(webStream).blob();
+    const file = new File([blob], filename);
+    return this.jobs.create(file, { ...options, filename } as JobCreateOptionsV1 & { filename?: string });
   }
 }

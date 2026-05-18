@@ -54,8 +54,18 @@ export class WebhookVerifier {
     }) => {
       fastify.addHook('preHandler', async (request, reply) => {
         const sig = (request.headers['x-webhook-signature'] as string | undefined) ?? '';
-        const body = request.rawBody ?? Buffer.from(JSON.stringify(request.body ?? ''));
-        if (!this.verify(body, sig)) {
+        const rawBody = request.rawBody;
+        if (!rawBody) {
+          // rawBody is absent — Fastify must be configured to preserve it:
+          //   fastify.addContentTypeParser('application/json', { parseAs: 'buffer' }, (req, body, done) => {
+          //     (req as any).rawBody = body;
+          //     done(null, JSON.parse(body.toString()));
+          //   });
+          return reply.code(400).send({
+            error: 'rawBody not available — configure Fastify to preserve the raw request body for HMAC verification',
+          });
+        }
+        if (!this.verify(rawBody, sig)) {
           return reply.code(401).send({ error: 'Invalid webhook signature' });
         }
       });

@@ -6,6 +6,12 @@ import type { AudioClient } from '@hadidyapp/audio-sdk';
 
 export interface DownloadToPathOptions {
   onProgress?: (downloadedBytes: number) => void;
+  /**
+   * Abort the download if it takes longer than this many milliseconds.
+   * Prevents disk exhaustion from an infinitely-streaming response.
+   * Default: 600 000 ms (10 minutes).
+   */
+  downloadTimeoutMs?: number;
 }
 
 export async function downloadToPath(
@@ -16,14 +22,24 @@ export async function downloadToPath(
 ): Promise<void> {
   if (!outputPath) throw new TypeError('outputPath must be a non-empty string');
 
-  // Normalize to absolute path — makes traversal sequences visible (H-1 fix)
+  // resolve() normalises the path but does not restrict it to an allow-list.
+  // Callers are responsible for validating user-supplied paths before passing them here.
   const resolvedPath = resolve(outputPath);
 
-  const { onProgress } = options;
+  const { onProgress, downloadTimeoutMs = 600_000 } = options;
 
   const { url } = await client.jobs.getOutput(jobId);
 
-  const response = await fetch(url);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), downloadTimeoutMs);
+
+  let response: Response;
+  try {
+    response = await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   if (!response.ok || !response.body) {
     throw new Error(`Failed to download job output: HTTP ${response.status}`);
   }

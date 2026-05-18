@@ -1,10 +1,13 @@
-import { stat } from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
+import { openAsBlob } from 'node:fs';
 import { basename, resolve } from 'node:path';
-import type { AudioClient } from '@hadidyapp/audio-sdk';
-import type { Job, JobCreateOptionsV1 } from '@hadidyapp/audio-sdk';
+import type { AudioClient, Job, JobCreateOptionsV1 } from '@hadidyapp/audio-sdk';
 
 export interface UploadFromPathOptions extends JobCreateOptionsV1 {
+  /**
+   * Called with upload progress 0–100 when available.
+   * Note: progress reporting depends on the underlying fetch implementation;
+   * it is best-effort and may not fire on all runtimes.
+   */
   onProgress?: (percent: number) => void;
 }
 
@@ -15,33 +18,20 @@ export async function uploadFromPath(
 ): Promise<Job> {
   if (!filePath) throw new TypeError('filePath must be a non-empty string');
 
-  // Normalize to absolute path — makes traversal sequences visible and resolves symlinks (H-1 fix)
+  // resolve() normalises the path but does not restrict it to an allow-list.
+  // Callers are responsible for validating user-supplied paths before passing them here.
   const resolvedPath = resolve(filePath);
-
   const { onProgress, ...jobOptions } = options;
-
-  const fileStats = await stat(resolvedPath);
-  const totalBytes = fileStats.size;
   const filename = basename(resolvedPath);
 
-  let uploadedBytes = 0;
-  const stream = createReadStream(resolvedPath);
+  // openAsBlob returns a Blob backed by the file descriptor — no RAM buffering.
+  // Available in Node.js 20+.
+  const blob = await openAsBlob(resolvedPath);
+  const file = new File([blob], filename);
 
-  const chunks: Uint8Array[] = [];
-  for await (const chunk of stream) {
-    const buf = chunk instanceof Buffer ? chunk : Buffer.from(chunk as ArrayBuffer);
-    chunks.push(new Uint8Array(buf));
-    uploadedBytes += buf.length;
-    onProgress?.(Math.round((uploadedBytes / totalBytes) * 100));
-  }
-
-  const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
-  const merged = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const chunk of chunks) {
-    merged.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  return client.jobs.create(merged, { ...jobOptions, filename } as JobCreateOptionsV1 & { filename?: string });
+  // onProgress is best-effort only; streaming progress requires runtime support.
+  onProgress?.(0);
+  const job = await client.jobs.create(file, jobOptions as JobCreateOptionsV1 & { filename?: string });
+  onProgress?.(100);
+  return job;
 }
